@@ -8,12 +8,14 @@ using Xunit;
 
 namespace Tests.IntegrationTests;
 
+// Integration tests for the UpdateToDoHandler class.
+// These tests use EF Core's in-memory database to simulate real database behavior.
 public class UpdateToDoHandlerTests
 {
     private ApplicationDbContext CreateInMemoryContext()
     {
         var options = new DbContextOptionsBuilder<ApplicationDbContext>()
-            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString()) // unikalna baza dla każdego testu
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
             .Options;
 
         return new ApplicationDbContext(options);
@@ -24,8 +26,10 @@ public class UpdateToDoHandlerTests
     {
         // Arrange
         await using var context = CreateInMemoryContext();
+
         var handler = new UpdateToDoHandler(context);
 
+        // Create a command for a ToDo that doesn't exist in the DB
         var command = new UpdateToDoCommand
         {
             Id = Guid.NewGuid(),
@@ -39,6 +43,7 @@ public class UpdateToDoHandlerTests
         ErrorOr<Unit> result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
+        // Expect the result to indicate an error (not found)
         Assert.True(result.IsError);
         Assert.Equal("ToDo.NotFound", result.FirstError.Code);
     }
@@ -63,6 +68,7 @@ public class UpdateToDoHandlerTests
 
         var handler = new UpdateToDoHandler(context);
 
+        // Prepare an update command with new values
         var command = new UpdateToDoCommand
         {
             Id = existing.Id,
@@ -76,9 +82,13 @@ public class UpdateToDoHandlerTests
         ErrorOr<Unit> result = await handler.Handle(command, CancellationToken.None);
 
         // Assert
+        // Expect no error
         Assert.False(result.IsError);
 
+        // Fetch the updated entity from the database
         var updated = await context.ToDos.FirstOrDefaultAsync(t => t.Id == existing.Id);
+
+        // Verify it still exists and all fields were updated correctly
         Assert.NotNull(updated);
         Assert.Equal("New", updated!.Title);
         Assert.Equal("Updated", updated.Description);

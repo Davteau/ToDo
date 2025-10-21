@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace Application.Common.Models;
 
@@ -17,6 +12,7 @@ public class ToDo
     [MaxLength(500)]
     public string Description { get; set; } = string.Empty;
 
+    [Range(0, 100)]
     public int PercentComplete { get; set; }
 
     public DateTime ExpiryDate { get; set; }
